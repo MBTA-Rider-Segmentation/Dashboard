@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>MBTA Rider Segmentation Dashboard</title>
+
+    <!-- css and library imports -->
+    <link rel="stylesheet" href="lib/css/tether.min.css">
+    <link rel="stylesheet" href="lib/css//bootstrap.min.css">
+    <link rel="stylesheet" href="lib/css//bootstrap-grid.min.css">
+    <link rel="stylesheet" href="lib/css//bootstrap-reboot.min.css">
+    <link rel="stylesheet" href="lib/css/keen-dashboards.css">
+    <link rel="stylesheet" href="lib/css/leaflet.css">
+    <link rel="stylesheet" href="lib/css/font-awesome.min.css">
+
+    <link rel="stylesheet" href="css/custom.css">
+
+    <script src="lib/js/tether.min.js"></script>
+    <script type="text/javascript" src="lib/js/jquery-3.3.1.min.js"></script>
+</head>
+
+<body class="application">
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-toggleable-md navbar-light bg-light">
+        <a href="https://ac297r-mbta-2018.github.io/Final-Report/" class="navbar-brand ml-4">
+            <!-- icon downloaded from http://www.brandsoftheworld.com/logo/mbta-0 -->
+            <!-- converted to .svg using https://cloudconvert.com/eps-to-svg -->
+            <img src="img/MBTA_full.svg" width="200" height="50" alt="MBTA logo">
+        </a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#MBTAnavbar" aria-controls="MBTAnavbar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end mr-4" id="MBTAnavbar">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="index.html">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="https://ac297r-mbta-2018.github.io/Final-Report/">Report</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="https://ac297r-mbta-2018.github.io/Code-Documentation/">Documentation</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="about.html">About</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container-fluid dashboard-body">
+        <div class="btn-toolbar toolbar pt-2 pb-2 m-0 justify-content-center" role="toolbar" aria-label="Segmentation toolbar">
+            <form id="req-form" class="form-inline">
+                <label class="input-group-prepend p-2 toolbar-text toolbar-text-bold" for="view-selection">Data Selection: </label>
+                <div class="input-group" role="group" aria-label="View Selector">
+                    <label class="input-group-prepend input-group-addon m-0 p-2 toolbar-text" for="view-selection">View </label>
+                    <select class="custom-select toolbar-text m-0 p-2 pr-4" id="view-selection">
+                        <option selected value="overview">Overview</option>
+                        <option value="hierarchical">Hierarchical Clusters</option>
+                        <option value="non-hierarchical">Non-Hierarchical Clusters</option>
+                    </select>
+                </div>
+
+                <div class="input-group" role="group" aria-label="Start Month Selector">
+                    <label class="input-group-prepend input-group-addon ml-2 m-0 p-2 toolbar-text" for="month-selection">Start Month </label>
+                    <select class="custom-select toolbar-text m-0 p-2 pr-4" id="month-selection">
+                        <option value="1612">Dec 2016</option>
+                        <option value="1701">Jan 2017</option>
+                        <option value="1702">Feb 2017</option>
+                        <option value="1703">Mar 2017</option>
+                        <option value="1704">Apr 2017</option>
+                        <option value="1705">May 2017</option>
+                        <option value="1706">Jun 2017</option>
+                        <option value="1707">Jul 2017</option>
+                        <option value="1708">Aug 2017</option>
+                        <option value="1709">Sep 2017</option>
+                        <option selected value="1710">Oct 2017</option>
+                        <option value="1711">Nov 2017</option>
+                    </select>
+                </div>
+
+                <div class="input-group" role="group" aria-label="Duration Selector">
+                    <label class="input-group-prepend input-group-addon ml-2 p-2 toolbar-text" for="duration-selection">Duration </label>
+                    <select class="custom-select toolbar-text" id="duration-selection">
+                        <option selected value="1">1 month</option>
+                        <option disabled value="3">3 months</option>
+                    </select>
+                </div>
+
+                <div class="input-group" role="group" aria-label="Time Weight Selector">
+                    <label class="input-group-prepend input-group-addon ml-2 p-2 toolbar-text" for="time-weight-selection">Time Weight </label>
+                    <select class="custom-select toolbar-text" id="time-weight-selection">
+                        <option selected value="0">0</option>
+                        <option disabled value="25">25</option>
+                        <option disabled value="50">50</option>
+                        <option disabled value="75">75</option>
+                        <option disabled value="100">100</option>
+                    </select>
+                </div>
+
+                <div class="input-group" role="group" aria-label="Algorithm Selector">
+                    <label class="input-group-prepend input-group-addon ml-2 p-2 toolbar-text" for="algorithm-selection">Algorithm </label>
+                    <select class="custom-select toolbar-text" id="algorithm-selection">
+                        <option selected value="lda">LDA</option>
+                        <option value="kmeans">Kmeans</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary-style toolbar-text ml-2" id="btn-recluster">View!</button>
+            </form>
+        </div>
+
+        <div id='dashboard-content'>
+            <!-- First row -->
+            <div class="row">
+                <!-- Cluster Overview Chart -->
+                <div class="col-sm-4">
+                    <div class="chart-wrapper">
+                        <div class="chart-title">
+                            <p>Clusters 2D-View</p>
+                        </div>
+                        <div class="chart-stage">
+                            <div id="pca-chart"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Cluster Overview Chart -->
+
+                <!-- Cluster Simple Stat Chart -->
+                <div class="col-sm-4">
+                    <div class="chart-wrapper">
+                        <div class="chart-title">
+                            <p>Cluster Simple Statistics</p>
+                            <div id="simple-stat-data-selection"></div>
+                        </div>
+                        <div class="chart-stage">
+                            <div id="simple-stat-chart"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Cluster Simple Stat Chart -->
+
+                <!-- Cluster Description Chart -->
+                <div class="col-sm-4">
+                    <div class="chart-wrapper">
+                        <div class="chart-title">
+                            <p>Cluster Description</p>
+                            <div id="description-data-selection"></div>
+                        </div>
+                        <div class="chart-stage">
+                            <div id="description-chart"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Cluster Description Chart -->
+
+            </div>
+            <!-- End of first row -->
+
+
+
+            <!-- Second row -->
+            <div class="row">
+                <!-- Temporal Pattern Chart -->
+                <div class="col-sm-6">
+                    <div class="chart-wrapper">
+                        <div class="chart-title">
+                            <p>Temporal Pattern Chart</p>
+                            <div id="temporal-legend"></div>
+                        </div>
+                        <div class="chart-stage">
+                            <div id="temporal-chart"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Temporal Pattern Chart -->
+
+                <!-- Map Chart -->
+                <div class="col-sm-6">
+                    <div class="chart-wrapper">
+                        <div class="chart-title">
+                            <p>Geographical Pattern Chart</p>
+                            <div id="geo-data-selection"></div>
+                        </div>
+                        <div class="chart-stage">
+                            <div id="geographical-chart"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Map Chart -->
+
+            </div>
+            <!-- End of Second row -->
+
+            <!-- Third row -->
+            <div class="row">
+
+                <!-- Purchase Pattern Chart -->
+                <div class="col-sm-12">
+                    <div class="chart-wrapper">
+                        <div class="chart-title">
+                            <p>Ticket Purchasing Pattern Charts</p>
+                            <div id="purchase_chart-selector"></div>
+                            <div id="purchase_view-selector"></div>
+                        </div>
+                        <div class="chart-stage">
+                            <div id="purchase-chart"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Purchase Pattern Chart -->
+            </div>
+            <!-- End Third row -->
+
+            <!-- Fourth row -->
+            <div class="row">
+                <!-- Basic Demographics Chart -->
+                <div class="col-sm-12">
+                    <div class="chart-wrapper">
+                        <div class="chart-title">
+                            <p>Basic Demographics - Race, Education, Income</p>
+                            <div id="basic_demographics_chart-selector"></div>
+                            <div id="basic_demographics_view-selector"></div>
+                        </div>
+                        <div class="chart-stage">
+                            <div id="basic_demographics-chart"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Basic Demographics Chart -->
+            </div>
+            <!-- End Fourth row -->
+        </div>
+
+
+
+    </div>
+
+    <script src="lib/js/bootstrap.min.js"></script>
+    <script src="lib/js/underscore-min.js"></script>
+    <script src="lib/js/d3.min.js"></script>
+    <script src="lib/js/d3-tip.js"></script>
+    <script src="lib/js/d3pie.min.js"></script>
+    <script src="lib/js/queue.js"></script>
+    <script src="lib/js/leaflet.js"></script>
+    <script src="lib/js/leaflet-heat.js"></script>
+    <script src="lib/js/keen.min.js"></script>
+    <script src='js/stackedOrGroupedBarChart.js' type='text/javascript'></script>
+    <script src='js/clusterPCAVis.js' type='text/javascript'></script>
+    <script src='js/clusterSimpleStatVis.js' type='text/javascript'></script>
+    <script src='js/clusterReport.js' type='text/javascript'></script>
+    <script src='js/hourlyHeatmap.js' type='text/javascript'></script>
+    <script src='js/temporalPatternVis.js' type='text/javascript'></script>
+    <script src='js/temporalLegend.js' type='text/javascript'></script>
+    <script src='js/clusterDonutChart.js' type='text/javascript'></script>
+    <script src='js/groupDonutChart.js' type='text/javascript'></script>
+    <script src='js/multiStackedBarChart.js' type='text/javascript'></script>
+    <script src='js/groupDistributionVis.js' type='text/javascript'></script>
+    <script src='js/bostonMap.js' type='text/javascript'></script>
+    <script src='js/main.js' type='text/javascript'></script>
+    <script src='js/app.js' type='text/javascript'></script>
+</body>
+
+</html>
